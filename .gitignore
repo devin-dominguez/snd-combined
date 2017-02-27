@@ -1,0 +1,12 @@
+*~
+*.txt.user
+*.DS_Store
+
+build/*
+debug/*
+
+bin/*
+!bin/data/
+
+addons/*
+!addons/clone_addons.sh
