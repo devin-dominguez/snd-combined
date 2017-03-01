@@ -20,4 +20,6 @@ public:
     int screenHeight;
 
     bool calibrating;
+    bool testing;
+    vector<ofVec2f> testBlobs;
 };

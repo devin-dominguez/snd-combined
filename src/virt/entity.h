@@ -38,6 +38,7 @@ class Entity {
     } type;
 
     void kill();
+    void death();
 
     ////////////////////////////
     // GETTERS /////////////////
@@ -48,7 +49,10 @@ class Entity {
     bool isCollidable();
 
     static ofFloatColor colors[5];
+
   protected:
+    int voice;
+    void oscEvent(string param, double data);
     ////////////////////////////
     // PROPERTIES //////////////
     ////////////////////////////

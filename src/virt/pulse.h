@@ -5,6 +5,7 @@
 
 class Pulse : public Entity {
   public:
+    static void setup();
     ////////////////////////////
     // Enums ///////////////////
     ////////////////////////////
@@ -36,6 +37,8 @@ class Pulse : public Entity {
       PulseType pulseType
     );
 
+    void death();
+
     ////////////////////////////
     // FRAME METHODS ///////////
     ////////////////////////////
@@ -43,6 +46,10 @@ class Pulse : public Entity {
     void draw();
 
   protected:
+    static deque<int> voices;
+    void oscInit();
+    void oscUpdate();
+
     double growthRate;
     double decayRate;
     double timeRemaining;

@@ -7,23 +7,31 @@
 #include "fake_height.h"
 
 void ofApp::setup() {
-  calibrating = getenv("CALIBRATE") ? true : false;
   ofSetFrameRate(60);
   ofSetLogLevel(OF_LOG_ERROR);
-  //screenWidth = ofGetScreenWidth();
-  //screenHeight = ofGetScreenHeight();
   screenWidth = 800;
   screenHeight = 600;
   //ofSetLogLevel(OF_LOG_VERBOSE);
-  depthCamera.setup();
-  rgbCamera.setup();
-  colorTracker.setup();
-  if (calibrating) {
-    calibrationServer.setup(&rgbCamera, &depthCamera, &colorTracker);
+
+  calibrating = getenv("CALIBRATE") ? true : false;
+  testing = getenv("TESTING") ? true : false;
+  if (!testing) {
+    depthCamera.setup();
+    rgbCamera.setup();
+    colorTracker.setup();
+    HeightMap::setHeightMap(&depthCamera);
+    if (calibrating) {
+      calibrationServer.setup(&rgbCamera, &depthCamera, &colorTracker);
+    }
+  } else {
+    // fake data
+    HeightMap::setHeightMap(new FakeHeight());
+    //testBlobs.push_back(ofVec2f(60, 60));
+    testBlobs.push_back(ofVec2f(600, 300));
+    testBlobs.push_back(ofVec2f(400, 120));
+    //testBlobs.push_back(ofVec2f(60, 400));
   }
 
-  //HeightMap::setHeightMap(new FakeHeight());
-  HeightMap::setHeightMap(&depthCamera);
   HeightMap::map->setWorldDimensions(640, 480);
 
   ofSetWindowShape(screenWidth, screenHeight);
@@ -35,19 +43,32 @@ void ofApp::setup() {
 }
 
 void ofApp::update() {
-  depthCamera.update();
-  rgbCamera.update();
-  colorTracker.update(&rgbCamera.getPixels(), rgbCamera.getBounds(), rgbCamera.getRotation());
-  if (calibrating) {
-    calibrationServer.update();
-  }
   double dt = ofGetLastFrameTime();
-  Virt::update(dt, colorTracker.getPoints());
+  if (!testing) {
+    depthCamera.update();
+    rgbCamera.update();
+    colorTracker.update(
+        &rgbCamera.getPixels(),
+        rgbCamera.getBounds(),
+        rgbCamera.getRotation()
+        );
+
+    if (calibrating) {
+      calibrationServer.update();
+    }
+    Virt::update(dt, colorTracker.getPoints());
+  } else {
+    Virt::update(dt, testBlobs);
+  }
 }
 
 void ofApp::draw() {
   ofBackground(50);
   Projector::startDraw();
+  if (testing) {
+    FakeHeight* fakeMap = (FakeHeight*)HeightMap::map;
+    fakeMap->draw(640, 480);
+  }
   //depthCamera.draw(640, 480);
   Virt::draw();
   Projector::endDraw();

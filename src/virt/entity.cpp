@@ -1,5 +1,7 @@
 #include "entity.h"
 
+#include "gc_osc.h"
+
 ////////////////////////////
 // CONSTRUCTOR /////////////
 ////////////////////////////
@@ -40,6 +42,13 @@ void Entity::fadeIn(double dt) {
 
 void Entity::kill() {
   phase = DYING;
+}
+
+void Entity::death() {}
+
+void Entity::oscEvent(string param, double data) {
+  OSCEvent event(type, voice, param, data);
+  OSCHandler::queueEvent(event);
 }
 
 void Entity::fadeOut(double dt) {

@@ -18,7 +18,7 @@ RocketNode::RocketNode() {
   sizeTarget = 0.0;
   rotation = 0.0;
   rotationRate = 360.0 / -6.0;
-  lerpRate = 3.0;
+  lerpRate = 2.0;
 }
 
 void RocketNode::setup(ofPoint nodePosition, double nodeSize) {
@@ -85,7 +85,7 @@ void RocketNode::draw(double fadeLevel) {
       double angle = 360.0 * (double)i / (double)numRockets + rotation;
       ofPushMatrix();
       ofRotate(angle);
-      ofTranslate(nodeSize, 0);
+      ofTranslate(nodeSize * 1.25, 0);
         ofBeginShape();
           ofVertex(rocketScreenSize, 0);
           ofVertex(-rocketScreenSize, rocketScreenSize / 2.0);

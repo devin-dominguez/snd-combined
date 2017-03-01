@@ -5,9 +5,16 @@
 #include "heightmap.h"
 #include "explosion.h"
 #include "trail.h"
+#include "gc_osc.h"
+
+deque<int> Rocket::voices;
+void Rocket::setup() {
+  for (int i = 0; i < 64; i++) {
+    voices.push_back(i);
+  }
+}
 
 vector<Rocket> Rocket::collection;
-
 void Rocket::create(ofPoint position, double angle) {
   collection.push_back(Rocket(position, angle));
 }
@@ -19,9 +26,11 @@ Rocket::Rocket( ofPoint position, double angle) : Entity(position) {
   minSpeed = 12.0;
   allowedDownTime = 0.15;
 
+  z = HeightMap::map->getHeightAt(position);
   penetrationAngle = 0.0;
 
-  initialSpeed = 240.0;
+  initialSpeed = 280.0;
+  sqrSpeed = initialSpeed;
 
   fadeInTime = 0.125;
   fadeOutTime = 0.25;
@@ -40,6 +49,29 @@ Rocket::Rocket( ofPoint position, double angle) : Entity(position) {
   settings.gravity = -981;
   settings.friction = 0.1;
   physics.setup(angle, initialSpeed, settings);
+
+  move(1.0 / 60.0);
+  oscInit();
+}
+
+void Rocket::death() {
+  oscEvent("destroyed", 1);
+  voices.push_back(voice);
+}
+
+void Rocket::oscInit() {
+  voice = voices.front();
+  voices.pop_front();
+  oscEvent("created", 1);
+  oscUpdate();
+}
+
+void Rocket::oscUpdate() {
+  oscEvent("x", position.x);
+  oscEvent("y", position.y);
+  oscEvent("z", z);
+  oscEvent("speed", sqrSpeed / 102400.0);
+  oscEvent("penetrating", penetrating);
 }
 
 void Rocket::update(double dt) {
@@ -63,6 +95,8 @@ void Rocket::update(double dt) {
     case DEAD:
       break;
   };
+
+  oscUpdate();
 }
 
 void Rocket::move(double dt) {
@@ -80,7 +114,7 @@ void Rocket::move(double dt) {
     RocketTrail::create(position);
   }
 
-  double sqrSpeed = (velocity.x * velocity.x) + (velocity.y * velocity.y);
+  sqrSpeed = (velocity.x * velocity.x) + (velocity.y * velocity.y);
   if (sqrSpeed <= minSpeed) {
     downTime += dt;
   } else {
@@ -88,12 +122,11 @@ void Rocket::move(double dt) {
   }
 
   if (downTime >= allowedDownTime) {
-    explode();
+    //explode();
     kill();
   }
 
-  double z = HeightMap::map->getHeightAt(position);
-  z *= z;
+  z = HeightMap::map->getHeightAt(position);
   size = ofLerp(minSize, maxSize, z);
 }
 
@@ -119,6 +152,12 @@ void Rocket::explode() {
   for (size_t i = 0; i < 16; i++) {
     Debris::create(position);
   }
+  vector<double> data;
+  data.push_back(position.x);
+  data.push_back(position.y);
+  data.push_back(z);
+  data.push_back(sqrSpeed / 102400.0);
+  OSCHandler::specialEvent("rocket-explosion", data);
 }
 
 void Rocket::penetrate() {

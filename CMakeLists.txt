@@ -10,6 +10,7 @@ include(${OF_ROOT}/openFrameworks.cmake)
 ofxAddon(ofxXmlSettings)
 ofxAddon(ofxKinect)
 ofxAddon(ofxOpenCv)
+ofxAddon(ofxOsc)
 ofxaddon(addons/ofxV4L2Settings)
 ofxaddon(addons/ofxJSON)
 ofxaddon(addons/ofxIO)
@@ -46,6 +47,7 @@ set(SOURCES
     src/virt/explosion.cpp
     src/virt/trail.cpp
     src/virt/depth_physics.cpp
+    src/virt/gc_osc.cpp
 )
 
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated" )

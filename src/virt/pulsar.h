@@ -5,6 +5,7 @@
 
 class Pulsar : public Entity {
   public:
+    static void setup();
     ////////////////////////////
     // STATIC METHODS //////////
     ////////////////////////////
@@ -25,8 +26,12 @@ class Pulsar : public Entity {
     ////////////////////////////
     void update(double dt);
     void draw();
+    void death();
 
   private:
+    static deque<int> voices;
+    void oscInit();
+    void oscUpdate();
     void action(double dt);
     void wobble(double dt);
 
@@ -40,14 +45,14 @@ class Pulsar : public Entity {
     double minFrequency;
     double maxFrequency;
 
+    double height;
     double timeElapsed;
     double phasor;
 
     ofVec2f freqScale;
     ofVec2f ampScale;
 
-    double wobbleFreq;
-    double wobbleAmp;
+    double wobbleAmount;
     ofVec2f wobbleOffset;
 
 

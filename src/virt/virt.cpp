@@ -9,6 +9,7 @@
 #include "virt/blimp.h"
 #include "virt/explosion.h"
 #include "virt/trail.h"
+#include "gc_osc.h"
 
 void Virt::setup() {
   ofSetCircleResolution(100);
@@ -16,6 +17,13 @@ void Virt::setup() {
   // Node::create(ofPoint(120, 120));
   // Node::create(ofPoint(220, 220));
   Pulsar::create(ofPoint(320, 240));
+
+  OSCHandler::setup("127.0.0.1", 6666);
+  Pulse::setup();
+  Node::setup();
+  Pulsar::setup();
+  Rocket::setup();
+  Blimp::setup();
 }
 
 void Virt::update(double dt, vector<ofVec2f> blobs) {
@@ -45,6 +53,7 @@ void Virt::update(double dt, vector<ofVec2f> blobs) {
   Entity::collideCollection(Rocket::collection, Node::collection);
   Entity::collideCollection(Blimp::collection, Node::collection);
 
+  OSCHandler::sendEvents();
   createNodes(blobs);
 }
 

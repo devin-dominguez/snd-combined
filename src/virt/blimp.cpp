@@ -2,10 +2,18 @@
 #include "projector.h"
 #include "explosion.h"
 #include "trail.h"
+#include "heightmap.h"
 #include "depth_physics.h"
+#include "gc_osc.h"
+
+deque<int> Blimp::voices;
+void Blimp::setup() {
+  for (int i = 0; i < 16; i++) {
+    voices.push_back(i);
+  }
+}
 
 vector<Blimp> Blimp::collection;
-
 void Blimp::create(ofPoint position, double angle) {
   collection.push_back(Blimp(position, angle));
 }
@@ -17,7 +25,10 @@ Blimp::Blimp( ofPoint position, double angle) : Entity(position) {
   minSpeed = 16.0;
   allowedDownTime = 0.15;
 
-  initialSpeed = 200.0;
+  z = HeightMap::map->getHeightAt(position);
+
+  initialSpeed = 240.0;
+  sqrSpeed = initialSpeed;
 
   fadeInTime = 0.125;
   fadeOutTime = 0.25;
@@ -32,6 +43,27 @@ Blimp::Blimp( ofPoint position, double angle) : Entity(position) {
   settings.gravity = -981;
   settings.friction = 0.125;
   physics.setup(angle, initialSpeed, settings);
+  move(1.0 / 60.0);
+  oscInit();
+}
+
+void Blimp::death() {
+  oscEvent("destroyed", 1);
+  voices.push_back(voice);
+}
+
+void Blimp::oscInit() {
+  voice = voices.front();
+  voices.pop_front();
+  oscEvent("created", 1);
+  oscUpdate();
+}
+
+void Blimp::oscUpdate() {
+  oscEvent("x", position.x);
+  oscEvent("y", position.y);
+  oscEvent("z", z);
+  oscEvent("speed", sqrSpeed / 102400.0);
 }
 
 void Blimp::update(double dt) {
@@ -51,6 +83,8 @@ void Blimp::update(double dt) {
     case DEAD:
       break;
   };
+
+  oscUpdate();
 }
 
 void Blimp::move(double dt) {
@@ -62,7 +96,7 @@ void Blimp::move(double dt) {
     kill();
   }
 
-  double sqrSpeed = (velocity.x * velocity.x) + (velocity.y * velocity.y);
+  sqrSpeed = (velocity.x * velocity.x) + (velocity.y * velocity.y);
   if (sqrSpeed <= minSpeed) {
     downTime += dt;
   } else {
@@ -70,9 +104,12 @@ void Blimp::move(double dt) {
   }
 
   if (downTime >= allowedDownTime) {
-    explode();
+    //explode();
     kill();
   }
+
+  z = HeightMap::map->getHeightAt(position);
+  size = ofLerp(minSize, maxSize, z);
 
   BlimpTrail::create(position, previousPosition);
   previousPosition = position;
@@ -93,6 +130,12 @@ void Blimp::explode() {
   for (size_t i = 0; i < 32; i++) {
     BlimpDebris::create(position);
   }
+  vector<double> data;
+  data.push_back(position.x);
+  data.push_back(position.y);
+  data.push_back(z);
+  data.push_back(sqrSpeed / 102400.0);
+  OSCHandler::specialEvent("blimp-explosion", data);
 }
 
 void Blimp::draw() {

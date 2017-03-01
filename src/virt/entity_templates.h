@@ -16,14 +16,13 @@ void Entity::drawCollection(Collection &collection) {
 
 template<class Collection>
 void Entity::pruneCollection(Collection &collection) {
-  collection.erase(
-    remove_if(
-      collection.begin(),
-      collection.end(),
-      [](Entity& entity) { return entity.isDead(); }
-    ),
-    collection.end()
-  );
+  size_t i = collection.size();
+  while (i--) {
+    if(collection[i].isDead()) {
+      collection[i].death();
+      collection.erase(collection.begin() + i);
+    }
+  }
 }
 
 template<class CollectionA, class CollectionB>

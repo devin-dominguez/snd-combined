@@ -1,9 +1,16 @@
 #include "pulse.h"
 
 #include "projector.h"
+#include "gc_osc.h"
+
+deque<int> Pulse::voices;
+void Pulse::setup() {
+  for (int i = 0; i < 8; i++) {
+    voices.push_back(i);
+  }
+}
 
 vector<Pulse> Pulse::collection;
-
 void Pulse::create(
   ofPoint position,
   double initialSize,
@@ -18,6 +25,7 @@ Pulse::Pulse(
   PulseType pulseType = DEFAULT
 ) : Entity(position)
 {
+
   size = initialSize;
   fadeOutTime = 1.0;
   duration = 5.0;
@@ -33,11 +41,32 @@ Pulse::Pulse(
       break;
     case ORIGIN:
       color = Entity::colors[1];
-      growthRate = 180.0;
+      growthRate = 120.0;
       fadeInTime = 0.1;
-      decayRate = 40.0;
+      decayRate = 20.0;
       break;
   }
+
+  oscInit();
+}
+
+void Pulse::death() {
+  oscEvent("destroyed", 1);
+  voices.push_back(voice);
+}
+
+void Pulse::oscInit() {
+  voice = voices.front();
+  voices.pop_front();
+  oscEvent("created", 1);
+  oscEvent("type", pulseType);
+  oscEvent("x", position.x);
+  oscEvent("y", position.y);
+  oscUpdate();
+}
+
+void Pulse::oscUpdate() {
+  oscEvent("size", size);
 }
 
 void Pulse::update(double dt) {
@@ -56,6 +85,8 @@ void Pulse::update(double dt) {
     case DEAD:
       break;
   };
+
+  oscUpdate();
 }
 
 void Pulse::grow(double dt) {

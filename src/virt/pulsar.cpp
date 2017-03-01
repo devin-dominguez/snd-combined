@@ -3,6 +3,13 @@
 #include "pulse.h"
 #include "heightmap.h"
 
+deque<int> Pulsar::voices;
+void Pulsar::setup() {
+  for (int i = 0; i < 4; i++) {
+    voices.push_back(i);
+  }
+}
+
 vector<Pulsar> Pulsar::collection;
 void Pulsar::create(ofPoint position) {
   collection.push_back(Pulsar(position));
@@ -14,8 +21,8 @@ Pulsar::Pulsar(ofPoint position) : Entity(position) {
   type = PULSAR;
 
   phasor = 0.0;
-  minFrequency = 1.0 / 12.0;
-  maxFrequency = 1.0 / 4.0;
+  minFrequency = 1.0 / 18.0;
+  maxFrequency = 1.0 / 6.0;
 
   decayRange = 0.25;
   minDecayRate = 0.25;
@@ -23,9 +30,29 @@ Pulsar::Pulsar(ofPoint position) : Entity(position) {
 
   freqScale = ofVec2f(27, 31);
   ampScale = ofVec2f(4, 6);
-  wobbleFreq = 0.0;
-  wobbleAmp = 0.0;
+  wobbleAmount = 0.0;
   wobbleOffset = ofVec2f(0.0, 0.0);
+
+  height = 0.0;
+  oscInit();
+}
+
+void Pulsar::death() {
+  oscEvent("destroyed", 1);
+  voices.push_back(voice);
+}
+
+void Pulsar::oscInit() {
+  voice = voices.front();
+  voices.pop_front();
+  oscEvent("created", 1);
+  oscEvent("x", position.x);
+  oscEvent("y", position.y);
+}
+
+void Pulsar::oscUpdate() {
+  oscEvent("height", height);
+  oscEvent("wobble", wobbleAmount);
 }
 
 void Pulsar::update(double dt) {
@@ -42,11 +69,13 @@ void Pulsar::update(double dt) {
     case DEAD:
       break;
   };
+
+  oscUpdate();
 }
 
 void Pulsar::action(double dt) {
   // get average depth at location
-  double height = 0.0;
+  height = 0.0;
   for (size_t x = 0; x < size; x++) {
     for (size_t y = 0; y < size; y++) {
       ofPoint offset(x - size * 0.5, y - size * 0.5);
@@ -63,6 +92,7 @@ void Pulsar::action(double dt) {
     decayRate = minDecayRate;
     phasor -= 1.0;
     Pulse::create(position, 20, Pulse::ORIGIN);
+    oscEvent("trigger", 1);
   }
 
   wobble(dt);
@@ -74,13 +104,12 @@ void Pulsar::wobble(double dt) {
     nPhase = (phasor - decayRange) / (1.0 - decayRange);
     nPhase *= nPhase;
   }
-  wobbleFreq = fmax(nPhase, wobbleFreq - decayRate * dt);
-  wobbleAmp = fmax(nPhase, wobbleAmp - decayRate * dt);
+  wobbleAmount = fmax(nPhase, wobbleAmount - decayRate * dt);
   decayRate += 0.75 * dt;
 
-	wobbleOffset.x = cos(phasor * M_PI * 2 * freqScale.x * wobbleFreq);
-	wobbleOffset.y = sin(phasor * M_PI * 2 * freqScale.y * wobbleFreq);
-  wobbleOffset *= wobbleAmp * ampScale;
+	wobbleOffset.x = cos(phasor * M_PI * 2 * freqScale.x * wobbleAmount);
+	wobbleOffset.y = sin(phasor * M_PI * 2 * freqScale.y * wobbleAmount);
+  wobbleOffset *= wobbleAmount * ampScale;
 }
 
 void Pulsar::draw() {
@@ -105,7 +134,6 @@ void Pulsar::draw() {
       // inner masking
       ofSetColor(Entity::colors[0], 255.0 * fadeLevel);
       ofDrawCircle(0, 0, pulseScreenSize - 2.0);
-
     ofPopStyle();
   ofPopMatrix();
 }

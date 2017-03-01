@@ -44,8 +44,9 @@ void PulseNode::cooling(double dt) {
     ready = false;
   } else {
     ready = true;
-    coolDown = 0.0;
   }
+
+  coolDown = fmax(0.0, coolDown);
 }
 
 double PulseNode::getNormalizedCoolDown() {

@@ -8,6 +8,7 @@
 
 class Node : public Entity {
   public:
+    static void setup();
     ////////////////////////////
     // STATIC METHODS //////////
     ////////////////////////////
@@ -28,19 +29,26 @@ class Node : public Entity {
     ////////////////////////////
     void update(double dt);
     void draw();
+    void death();
 
     void collideWith(Entity* entity);
 
     bool pulseReady();
 
   protected:
+    static deque<int> voices;
+    void oscInit();
+    void oscUpdate();
+
     PulseNode pulseNode;
     RocketNode rocketNode;
     BlimpNode blimpNode;
     double pulsateAmpMin;
     double pulsateAmpMax;
+    double pulsateAmp;
     double pulsateFreqMin;
     double pulsateFreqMax;
+    double pulsateFreq;
     double pulsate;
     double phasor;
 

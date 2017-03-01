@@ -18,7 +18,7 @@ BlimpNode::BlimpNode() {
   sizeTarget = 0.0;
   rotation = 0.0;
   rotationRate = 360.0 / -6.0;
-  lerpRate = 5.0;
+  lerpRate = 3.0;
 }
 
 void BlimpNode::setup(ofPoint nodePosition, double nodeSize) {
@@ -85,7 +85,7 @@ void BlimpNode::draw(double fadeLevel) {
       double angle = 360.0 * (double)i / (double)numBlimps + rotation;
       ofPushMatrix();
       ofRotate(angle);
-      ofTranslate(nodeSize * 0.75, 0);
+      ofTranslate(nodeSize * 0.9, 0);
         ofSetRectMode(OF_RECTMODE_CENTER);
         ofDrawRectRounded(0, 0, blimpScreenSize * 2, blimpScreenSize, 10);
       ofPopMatrix();
